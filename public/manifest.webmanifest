@@ -1,0 +1,26 @@
+{
+  "name": "MARVEL Inventory",
+  "short_name": "MARVEL",
+  "description": "MARVEL makerspace inventory — scan, issue, and return tools and parts. Works offline.",
+  "id": "/",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#B45309",
+  "background_color": "#ffffff",
+  "icons": [
+    {
+      "src": "icons.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icons.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+/* Fallback target for `@import "tailwindcss"` in src/index.css.
+ * Used ONLY when the `tailwindcss` package is not installed (vite.config.ts
+ * aliases the bare specifier here in that case). It intentionally defines
+ * nothing: every class the app uses is defined in src/index.css, so the UI
+ * renders identically with or without tailwind. Once `tailwindcss` is
+ * installed, this file is bypassed and the real package resolves instead. */

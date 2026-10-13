@@ -1,0 +1,778 @@
+/* MARVEL V1 design tokens + operate-surface styles.
+ * Plain CSS on purpose: works with or without the tailwind vite plugin.
+ * When `@tailwindcss/vite` is installed, `@import "tailwindcss"` below
+ * resolves to the real package; otherwise vite.config.ts aliases it to
+ * src/lib/tailwind-stub.css so the build never breaks. No component relies
+ * on tailwind utilities — every class used is defined in this file. */
+@import "tailwindcss";
+
+:root {
+  --accent: #b45309;
+  --accent-ink: #92400e;
+  --accent-wash: #fef3e6;
+  --ink: #1c1917;
+  --ink-soft: #57534e;
+  --ink-faint: #78716c;
+  --paper: #ffffff;
+  --chrome: #f5f4f2;
+  --line: #e7e2dc;
+  --good: #15803d;
+  --good-wash: #ecfdf3;
+  --warn: #b45309;
+  --warn-wash: #fef3e6;
+  --bad: #b91c1c;
+  --bad-wash: #fef2f2;
+  --muted: #78716c;
+  --muted-wash: #f5f4f2;
+  --radius: 12px;
+  --nav-h: 64px;
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter,
+    "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--ink);
+  background: var(--chrome);
+}
+
+#root {
+  min-height: 100svh;
+}
+
+h1.screen-title {
+  font-size: 28px;
+  line-height: 1.2;
+  margin: 0 0 4px;
+  letter-spacing: -0.01em;
+}
+
+h2.card-title {
+  font-size: 20px;
+  line-height: 1.25;
+  margin: 0;
+}
+
+p.meta {
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin: 0;
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Dashed focus rings everywhere — visible in dust and glare. */
+:focus-visible {
+  outline: 2px dashed var(--accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* ---- App frame ---------------------------------------------------- */
+.app {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  background: var(--chrome);
+}
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px calc(12px + env(safe-area-inset-top) * 0);
+  padding-top: calc(12px + env(safe-area-inset-top));
+  background: var(--paper);
+  border-bottom: 1px solid var(--line);
+}
+
+.app-eyebrow {
+  font-size: 13px;
+  color: var(--ink-faint);
+  margin: 0;
+}
+
+.app-title {
+  font-size: 20px;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.app-main {
+  flex: 1;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 16px 16px calc(var(--nav-h) + 36px);
+}
+
+.app-footer-note {
+  text-align: center;
+  padding: 0 0 8px;
+}
+
+/* ---- Bottom nav ---------------------------------------------------- */
+.bottom-nav {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 30;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  background: var(--paper);
+  border-top: 1px solid var(--line);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.bottom-nav a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 48px;
+  padding: 8px 4px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  text-decoration: none;
+}
+
+.bottom-nav a svg {
+  width: 22px;
+  height: 22px;
+}
+
+.bottom-nav a[aria-current="page"] {
+  color: var(--accent-ink);
+  font-weight: 600;
+  box-shadow: inset 0 2px 0 var(--accent);
+}
+
+/* ---- Buttons ------------------------------------------------------- */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 16px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--accent);
+  border: 1px solid var(--accent-ink);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.btn-primary:active {
+  transform: translateY(1px);
+}
+
+.btn-primary:disabled {
+  background: #d6cfc7;
+  border-color: #d6cfc7;
+  color: #fff;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 16px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--accent-ink);
+  background: var(--paper);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 48px;
+  padding: 10px 16px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.btn-danger-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 48px;
+  padding: 10px 16px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--bad);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.btn-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.field-hint {
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin: 4px 0 0;
+}
+
+.field-error {
+  font-size: 13px;
+  color: var(--bad);
+  margin: 4px 0 0;
+}
+
+/* Pinned primary action — bottom thumb zone on phones. */
+.pinned {
+  position: sticky;
+  bottom: calc(var(--nav-h) + 16px);
+  z-index: 10;
+  margin-top: 36px;
+  padding: 12px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: 0 -4px 16px rgb(28 25 23 / 0.08);
+}
+
+/* ---- Inputs -------------------------------------------------------- */
+label.field {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin: 16px 0 0;
+}
+
+input.text,
+select.text,
+textarea.text {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  margin-top: 4px;
+  padding: 12px;
+  font-size: 16px;
+  font-family: inherit;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+input.text::placeholder {
+  color: var(--ink-faint);
+}
+
+input[type="file"].file {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  padding: 12px;
+  font-size: 15px;
+  background: var(--paper);
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+}
+
+/* ---- Segmented control ---------------------------------------------- */
+.seg {
+  display: grid;
+  gap: 4px;
+  padding: 4px;
+  background: var(--muted-wash);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.seg.cols-2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+.seg.cols-3 {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.seg button {
+  min-height: 48px;
+  padding: 10px 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.seg button[aria-pressed="true"] {
+  color: var(--accent-ink);
+  background: var(--paper);
+  border-color: var(--accent);
+  box-shadow: 0 1px 2px rgb(28 25 23 / 0.08);
+}
+
+/* ---- Pills, chips, status ------------------------------------------- */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 4px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.pill svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+
+.pill-online {
+  color: var(--good);
+  background: var(--good-wash);
+  border-color: #bbf0cd;
+}
+
+.pill-offline {
+  color: var(--warn);
+  background: var(--warn-wash);
+  border-color: #f3d3a7;
+}
+
+.pill-bad {
+  color: var(--bad);
+  background: var(--bad-wash);
+  border-color: #f3c2c2;
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.chip {
+  min-height: 48px;
+  padding: 10px 16px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.chip[aria-pressed="true"] {
+  color: var(--accent-ink);
+  background: var(--accent-wash);
+  border-color: var(--accent);
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.status-pill svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.status-available {
+  color: var(--good);
+}
+
+.status-available .status-dot {
+  background: var(--good);
+}
+
+.status-borrowed {
+  color: var(--warn);
+}
+
+.status-borrowed .status-dot {
+  background: var(--warn);
+}
+
+.status-overdue {
+  color: var(--bad);
+}
+
+.status-overdue .status-dot {
+  background: var(--bad);
+}
+
+.status-broken {
+  color: var(--muted);
+}
+
+/* ---- Cards and rows -------------------------------------------------- */
+.card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-top: 16px;
+}
+
+.card:first-child {
+  margin-top: 0;
+}
+
+.card-flat {
+  margin-top: 16px;
+  background: var(--paper);
+  border-block: 1px solid var(--line);
+  padding: 4px 16px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+  text-decoration: none;
+  color: inherit;
+}
+
+.row:last-child {
+  border-bottom: none;
+}
+
+.thumb {
+  width: 56px;
+  height: 56px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--chrome);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink-faint);
+  overflow: hidden;
+}
+
+.thumb svg {
+  width: 28px;
+  height: 28px;
+}
+
+.thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.row-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.row-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.cost-warning {
+  color: var(--bad);
+  font-weight: 600;
+  font-size: 15px;
+  margin: 4px 0 0;
+}
+
+/* ---- Viewfinder ------------------------------------------------------- */
+.viewfinder {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: #111;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+
+.viewfinder video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.viewfinder-idle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  height: 100%;
+  min-height: 220px;
+  padding: 16px;
+  color: #e7e2dc;
+  text-align: center;
+}
+
+.viewfinder-idle svg {
+  width: 44px;
+  height: 44px;
+}
+
+.scan-frame {
+  position: absolute;
+  inset: 36px 44px;
+  border: 2px solid #fff;
+  border-radius: 12px;
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+/* ---- Screen states ----------------------------------------------------- */
+.skel {
+  border-radius: 8px;
+  background: linear-gradient(90deg, var(--chrome) 25%, #eceae6 50%, var(--chrome) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.skel-row {
+  height: 68px;
+  margin-top: 4px;
+}
+
+.skel-line {
+  height: 15px;
+  margin-top: 4px;
+}
+
+.empty,
+.error-box,
+.success-box {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 36px 16px;
+  margin-top: 16px;
+  text-align: center;
+}
+
+.empty svg,
+.error-box svg,
+.success-box svg {
+  width: 40px;
+  height: 40px;
+  margin-bottom: 4px;
+}
+
+.empty h2,
+.error-box h2,
+.success-box h2 {
+  font-size: 20px;
+  margin: 0 0 4px;
+}
+
+.empty p,
+.error-box p,
+.success-box p {
+  font-size: 15px;
+  color: var(--ink-soft);
+  margin: 0 0 16px;
+}
+
+.error-box {
+  border-color: #f3c2c2;
+}
+
+.error-box svg {
+  color: var(--bad);
+}
+
+.success-box {
+  border-color: #bbf0cd;
+}
+
+.success-box svg {
+  color: var(--good);
+}
+
+.statement {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 0 4px;
+}
+
+.banner-offline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 12px 16px;
+  font-size: 15px;
+  background: var(--warn-wash);
+  border: 1px solid #f3d3a7;
+  border-radius: var(--radius);
+  color: var(--accent-ink);
+}
+
+.banner-offline svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+
+.sync-note {
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin: 4px 16px 0;
+  text-align: right;
+}
+
+/* Visually hidden live region for sync announcements. */
+.live-region {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---- Desk recompose (same routes, ≥1024px) ------------------------------ */
+@media (min-width: 1024px) {
+  .app-main {
+    max-width: 1160px;
+  }
+
+  .desk .operate {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 360px;
+    gap: 36px;
+    align-items: start;
+  }
+
+  .desk .operate-flow {
+    min-width: 0;
+  }
+
+  .desk .operate-side {
+    position: sticky;
+    top: 76px;
+  }
+
+  /* Explore-style routes (search, dues) recompose as
+     filters left / rows center / detail right. */
+  .desk .explore {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr) 340px;
+    gap: 36px;
+    align-items: start;
+  }
+
+  .bottom-nav {
+    position: sticky;
+  }
+
+  .app-main {
+    padding-bottom: 36px;
+  }
+
+  .pinned {
+    bottom: 16px;
+  }
+}
+
+/* ---- Motion -------------------------------------------------------------- */
+.btn-primary,
+.btn-secondary,
+.chip,
+.seg button {
+  transition: transform 150ms ease, background 150ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

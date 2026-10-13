@@ -1,0 +1,6 @@
+item,mpn,method,time_s,category_ok,merge_ok,notes
+Resistor strip 10k,10k,keyword,48,true,na,laya Pas 0.88 vs kw Pas, sticker ok
+Ic tube Ne555,NE555,laya,55,true,na,laya Act 0.91, Mpn autofill pulled datasheet
+Arduino Nano,Nano,laya,52,true,false,laya Brd 0.94, merge #42 rejected, print ok
+Hc-Sr04 module,HC-SR04,manual,71,true,na,laya Mod 0.62 under threshold, manual pick, gap keyword add hc-sr
+Multimeter,DT830D,keyword,44,true,na,laya Mea 0.79 vs kw Mea, wa.me check pending

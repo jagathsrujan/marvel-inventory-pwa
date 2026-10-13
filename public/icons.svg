@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <title>MARVEL Inventory icon</title>
+  <!-- Maskable: full-bleed amber field, no critical pixels near edges. -->
+  <rect width="512" height="512" rx="112" fill="#B45309"/>
+  <rect x="24" y="24" width="464" height="464" rx="96" fill="none" stroke="#92400E" stroke-width="8" opacity="0.45"/>
+  <path d="M136 356 V168 l76 4 44 96 44-96 76-4 v188" fill="none" stroke="#FFFFFF" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="376" cy="356" r="14" fill="#FFFFFF"/>
+</svg>
