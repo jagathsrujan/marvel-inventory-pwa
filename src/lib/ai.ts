@@ -125,10 +125,58 @@ export async function decideCategory(input: DecideInput): Promise<DecideResult> 
 
 const cleanupCache = new Map<string, CleanedText>();
 
+const CLOUD_TIMEOUT_MS = 8000;
+
 const FILLER =
   /\b(approx|approximately|about|left|remaining|pcs|pieces|nos|qty|quantity|home|shelf|rack|bin|strip|pouch|pouches|road|paise|please|item|this|that|there|here|with|from|into|slip|temp|number|wide|close|showing|photo)\b/gi;
 
-export function cleanupText(transcript: string): CleanedText {
+async function tryCloudCleanup(transcript: string): Promise<CleanedText | null> {
+  const base = import.meta.env.VITE_LLM_BASE_URL as string | undefined;
+  const key = import.meta.env.VITE_LLM_API_KEY as string | undefined;
+  const model = (import.meta.env.VITE_LLM_MODEL as string | undefined) ?? 'gemini-3-flash-lite';
+  if (!base || !key) return null;
+  const res = await fetch(`${base.replace(/\/$/, '')}/chat/completions`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', authorization: `Bearer ${key}` },
+    body: JSON.stringify({
+      model,
+      temperature: 0,
+      response_format: { type: 'json_object' },
+      messages: [
+        {
+          role: 'system',
+          content:
+            'Normalize one spoken electronics-inventory note to JSON: {"name":"Canonical part name (<=48 chars)","specs":{"qty":"count if stated","home":"R1-S2-B3 code if stated","marking":"markings like 104 BC547"}}. Reply with ONLY that JSON.',
+        },
+        { role: 'user', content: transcript.slice(0, 500) },
+      ],
+    }),
+    signal: AbortSignal.timeout(CLOUD_TIMEOUT_MS),
+  });
+  if (!res.ok) return null;
+  const body = (await res.json()) as { choices?: { message?: { content?: unknown } }[] };
+  const raw = body.choices?.[0]?.message?.content;
+  if (typeof raw !== 'string') return null;
+  const start = raw.indexOf('{');
+  const end = raw.lastIndexOf('}');
+  if (start < 0 || end <= start) return null;
+  const parsed = JSON.parse(raw.slice(start, end + 1)) as {
+    name?: unknown;
+    specs?: unknown;
+  };
+  if (typeof parsed.name !== 'string' || !parsed.name.trim()) return null;
+  const specs: Record<string, string> =
+    parsed.specs && typeof parsed.specs === 'object' && !Array.isArray(parsed.specs)
+      ? Object.fromEntries(
+          Object.entries(parsed.specs as Record<string, unknown>)
+            .filter(([, v]) => typeof v === 'string' || typeof v === 'number')
+            .map(([k, v]) => [k, String(v)]),
+        )
+      : {};
+  return { name: parsed.name.trim().slice(0, 48), specs };
+}
+
+function localCleanup(transcript: string): CleanedText {
   const key = transcript.trim().toLowerCase();
   const hit = cleanupCache.get(key);
   if (hit) return hit;
@@ -152,6 +200,22 @@ export function cleanupText(transcript: string): CleanedText {
   const out: CleanedText = { name, specs };
   cleanupCache.set(key, out);
   return out;
+}
+
+export async function cleanupText(transcript: string): Promise<CleanedText> {
+  const key = transcript.trim().toLowerCase();
+  const hit = cleanupCache.get(key);
+  if (hit) return hit;
+  try {
+    const cloud = await tryCloudCleanup(transcript);
+    if (cloud) {
+      cleanupCache.set(key, cloud);
+      return cloud;
+    }
+  } catch {
+    void 0;
+  }
+  return localCleanup(transcript);
 }
 
 export function cleanupCacheSize(): number {
