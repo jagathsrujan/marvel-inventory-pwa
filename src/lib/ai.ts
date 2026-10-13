@@ -1,5 +1,6 @@
 import type { CategoryName } from '../../shared/types';
 import { TAXONOMY_10 } from '../../shared/types';
+import { buildLlmRequest, extractLlmJson } from './llm-providers';
 
 export interface DecideInput {
   transcript: string;
@@ -130,41 +131,29 @@ const CLOUD_TIMEOUT_MS = 8000;
 const FILLER =
   /\b(approx|approximately|about|left|remaining|pcs|pieces|nos|qty|quantity|home|shelf|rack|bin|strip|pouch|pouches|road|paise|please|item|this|that|there|here|with|from|into|slip|temp|number|wide|close|showing|photo)\b/gi;
 
+function llmEnv(name: string): string | undefined {
+  const v = (import.meta.env as unknown as Record<string, unknown>)[name];
+  return typeof v === 'string' && v.length > 0 ? v : undefined;
+}
+
 async function tryCloudCleanup(transcript: string): Promise<CleanedText | null> {
-  const base = import.meta.env.VITE_LLM_BASE_URL as string | undefined;
-  const key = import.meta.env.VITE_LLM_API_KEY as string | undefined;
-  const model = (import.meta.env.VITE_LLM_MODEL as string | undefined) ?? 'inclusionai/ling-3.1-flash:free';
+  const base = llmEnv('VITE_LLM_BASE_URL');
+  const key = llmEnv('VITE_LLM_API_KEY');
+  const model = llmEnv('VITE_LLM_MODEL') ?? 'inclusionai/ling-3.1-flash:free';
+  const provider = llmEnv('VITE_LLM_PROVIDER') ?? 'openai-compatible';
   if (!base || !key) return null;
-  const res = await fetch(`${base.replace(/\/$/, '')}/chat/completions`, {
+  const req = buildLlmRequest({ provider, baseUrl: base, apiKey: key, model, transcript });
+  const res = await fetch(req.url, {
     method: 'POST',
-    headers: { 'content-type': 'application/json', authorization: `Bearer ${key}` },
-    body: JSON.stringify({
-      model,
-      temperature: 0,
-      response_format: { type: 'json_object' },
-      messages: [
-        {
-          role: 'system',
-          content:
-            'Normalize one spoken electronics-inventory note to JSON: {"name":"Canonical part name (<=48 chars)","specs":{"qty":"count if stated","home":"R1-S2-B3 code if stated","marking":"markings like 104 BC547"}}. Reply with ONLY that JSON.',
-        },
-        { role: 'user', content: transcript.slice(0, 500) },
-      ],
-    }),
+    headers: req.headers,
+    body: JSON.stringify(req.body),
     signal: AbortSignal.timeout(CLOUD_TIMEOUT_MS),
   });
   if (!res.ok) return null;
   const body = (await res.json()) as { choices?: { message?: { content?: unknown } }[] };
   const raw = body.choices?.[0]?.message?.content;
-  if (typeof raw !== 'string') return null;
-  const start = raw.indexOf('{');
-  const end = raw.lastIndexOf('}');
-  if (start < 0 || end <= start) return null;
-  const parsed = JSON.parse(raw.slice(start, end + 1)) as {
-    name?: unknown;
-    specs?: unknown;
-  };
-  if (typeof parsed.name !== 'string' || !parsed.name.trim()) return null;
+  const parsed = extractLlmJson(raw);
+  if (!parsed || typeof parsed.name !== 'string' || !parsed.name.trim()) return null;
   const specs: Record<string, string> =
     parsed.specs && typeof parsed.specs === 'object' && !Array.isArray(parsed.specs)
       ? Object.fromEntries(
