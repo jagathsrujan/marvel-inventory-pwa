@@ -17,17 +17,19 @@ for (const f of ['.env.local', '.env']) {
 }
 
 const required = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY'];
+if (strict) {
+  for (const k of ['VITE_LLM_BASE_URL', 'VITE_LLM_API_KEY', 'VITE_LLM_MODEL']) {
+    if (!required.includes(k)) required.push(k);
+  }
+}
 const optional = [
   'VITE_QR_BASE',
   'VITE_OLLAMA_URL',
   'VITE_OLLAMA_MODEL',
   'VITE_LLM_PROVIDER',
-  'VITE_LLM_BASE_URL',
-  'VITE_LLM_API_KEY',
-  'VITE_LLM_MODEL',
   'VITE_OCTOPART_KEY',
+  ...['VITE_LLM_BASE_URL', 'VITE_LLM_API_KEY', 'VITE_LLM_MODEL'].filter((k) => !required.includes(k)),
 ];
-if (strict) required.push('VITE_LLM_BASE_URL', 'VITE_LLM_API_KEY', 'VITE_LLM_MODEL');
 
 let fail = 0;
 for (const k of required) {

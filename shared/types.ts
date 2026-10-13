@@ -133,6 +133,16 @@ export interface Loan {
   status: LoanStatus;
 }
 
+// ---------------------------------------------------------------- roles (profiles table, migration 0001)
+export type StaffRole = 'admin' | 'storekeeper' | 'member';
+
+export interface Profile {
+  id: string;
+  role: StaffRole;
+  member_id: string | null;
+  created_at: string;
+}
+
 // ---------------------------------------------------------------- members / projects / kits / requests
 export type MemberTrack =
   | 'student'
@@ -151,6 +161,9 @@ export interface Member {
   course_year: string;
   track: MemberTrack;
   dues_count: number;
+  /** Soft-kick flag (migration 0002). Absent on old rows = treat as active. */
+  is_active?: boolean;
+  deactivated_at?: string | null;
 }
 
 /** Dues rule per track: course = term end, competition = event + 3d,

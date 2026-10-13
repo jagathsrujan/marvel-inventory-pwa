@@ -7,14 +7,20 @@
 import { fail, ok } from '../../shared/types';
 import type {
   ApiResult,
+  Category,
   Condition,
   Item,
   Ledger,
+  LedgerAction,
   Loan,
   Location,
   Member,
+  MemberTrack,
+  Profile,
+  Project,
   QrKind,
   Request,
+  StaffRole,
   StockLot,
 } from '../../shared/types';
 import { supabase } from './supabase';
@@ -600,6 +606,388 @@ export async function listOverdueLoans(): Promise<ApiResult<Loan[]>> {
       .limit(200);
     if (error) return fail(msg(error));
     return ok((data ?? []) as Loan[]);
+  } catch (e) {
+    return fail(msg(e));
+  }
+}
+
+// ------------------------------------------------------------------ admin console (0002)
+export interface AdminMemberInput {
+  name: string;
+  college_email: string;
+  phone?: string;
+  course_year?: string;
+  track: MemberTrack;
+}
+
+function memberCardQr(email: string): string {
+  const year = new Date().getFullYear();
+  const slug = email.split('@')[0].replace(/[^a-z0-9]/gi, '').toUpperCase().slice(0, 6) || 'STU';
+  const rand = Math.floor(100 + Math.random() * 900);
+  return `M/STU-${year}-${slug}-${rand}`;
+}
+
+export async function adminListMembers(params?: {
+  query?: string;
+  track?: MemberTrack | 'all';
+  activeOnly?: boolean;
+}): Promise<ApiResult<Member[]>> {
+  try {
+    let q = supabase.from('members').select('*').order('name', { ascending: true }).limit(200);
+    if (params?.activeOnly) q = q.eq('is_active', true);
+    if (params?.track && params.track !== 'all') q = q.eq('track', params.track);
+    const needle = params?.query?.trim();
+    if (needle) {
+      const like = `%${needle.replace(/[%_]/g, '')}%`;
+      q = q.or(`name.ilike.${like},college_email.ilike.${like},card_qr.ilike.${like}`);
+    }
+    const { data, error } = await q;
+    if (error) return fail(msg(error));
+    return ok((data ?? []) as Member[]);
+  } catch (e) {
+    return fail(msg(e));
+  }
+}
+
+export async function adminCreateMember(input: AdminMemberInput): Promise<ApiResult<Member>> {
+  try {
+    if (!input.name.trim()) return fail('name is required');
+    if (!input.college_email.trim()) return fail('college_email is required');
+    const { data, error } = await supabase
+      .from('members')
+      .insert({
+        card_qr: memberCardQr(input.college_email),
+        name: input.name.trim(),
+        college_email: input.college_email.trim().toLowerCase(),
+        phone: input.phone?.trim() ?? '',
+        course_year: input.course_year?.trim() ?? '',
+        track: input.track,
+        dues_count: 0,
+      })
+      .select('*')
+      .single();
+    if (error || !data) return fail(msg(error ?? 'Create failed'));
+    return ok(data as Member);
+  } catch (e) {
+    return fail(msg(e));
+  }
+}
+
+export interface BulkRowResult {
+  row: number;
+  email: string;
+  ok: boolean;
+  error: string | null;
+  member: Member | null;
+}
+
+export async function adminBulkCreateMembers(
+  rows: AdminMemberInput[],
+): Promise<ApiResult<BulkRowResult[]>> {
+  try {
+    const results: BulkRowResult[] = [];
+    for (let i = 0; i < rows.length; i += 1) {
+      const r = rows[i];
+      const res = await adminCreateMember(r);
+      results.push({
+        row: i + 1,
+        email: r.college_email,
+        ok: res.ok,
+        error: res.error,
+        member: res.data,
+      });
+    }
+    return ok(results);
+  } catch (e) {
+    return fail(msg(e));
+  }
+}
+
+export async function adminDeactivateMember(params: {
+  memberId: string;
+  reason: string;
+  byUser: string;
+  opId?: string;
+  forceWithDues?: boolean;
+}): Promise<ApiResult<Member>> {
+  try {
+    requireNote(params.reason);
+    const { data: raw, error: getErr } = await supabase
+      .from('members')
+      .select('*')
+      .eq('id', params.memberId)
+      .single();
+    if (getErr || !raw) return fail(msg(getErr ?? 'Member not found'));
+    const member = raw as Member;
+    if (!params.forceWithDues && (member.dues_count ?? 0) > 0) {
+      return fail(`Member has ${member.dues_count} open dues — clear them first or force with a reason.`);
+    }
+    const { data: open } = await supabase
+      .from('loans')
+      .select('id')
+      .eq('member_id', params.memberId)
+      .in('status', ['open', 'overdue'])
+      .limit(1);
+    if (!params.forceWithDues && open && open.length > 0) {
+      return fail('Member has open loans — collect returns first or force with a reason.');
+    }
+    const { data, error } = await supabase
+      .from('members')
+      .update({ is_active: false, deactivated_at: new Date().toISOString() })
+      .eq('id', params.memberId)
+      .select('*')
+      .single();
+    if (error || !data) return fail(msg(error ?? 'Deactivate failed'));
+    await supabase.from('profiles').update({ role: 'member' }).eq('member_id', params.memberId);
+    return ok(data as Member);
+  } catch (e) {
+    return fail(msg(e));
+  }
+}
+
+export async function adminReactivateMember(memberId: string): Promise<ApiResult<Member>> {
+  try {
+    const { data, error } = await supabase
+      .from('members')
+      .update({ is_active: true, deactivated_at: null })
+      .eq('id', memberId)
+      .select('*')
+      .single();
+    if (error || !data) return fail(msg(error ?? 'Reactivate failed'));
+    return ok(data as Member);
+  } catch (e) {
+    return fail(msg(e));
+  }
+}
+
+export async function adminSetRole(params: {
+  userId: string;
+  role: StaffRole;
+}): Promise<ApiResult<Profile>> {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({ role: params.role })
+      .eq('id', params.userId)
+      .select('*')
+      .single();
+    if (error || !data) return fail(msg(error ?? 'Role update failed'));
+    return ok(data as Profile);
+  } catch (e) {
+    return fail(msg(e));
+  }
+}
+
+export interface OpenLoanCount {
+  open: number;
+  overdue: number;
+  fines: number;
+}
+
+export async function adminOpenCounts(): Promise<ApiResult<OpenLoanCount>> {
+  try {
+    const { data, error } = await supabase
+      .from('loans')
+      .select('id, status, due_at')
+      .in('status', ['open', 'overdue'])
+      .limit(500);
+    if (error) return fail(msg(error));
+    const rows = (data ?? []) as Array<{ status: string; due_at: string }>;
+    const now = Date.now();
+    let overdue = 0;
+    for (const r of rows) {
+      if (r.status === 'overdue' || new Date(r.due_at).getTime() < now) overdue += 1;
+    }
+    return ok({ open: rows.length, overdue, fines: overdue * 10 });
+  } catch (e) {
+    return fail(msg(e));
+  }
+}
+
+export async function adminPendingRequestCount(): Promise<ApiResult<number>> {
+  try {
+    const { count, error } = await supabase
+      .from('requests')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'pending');
+    if (error) return fail(msg(error));
+    return ok(count ?? 0);
+  } catch (e) {
+    return fail(msg(e));
+  }
+}
+
+export interface LowStockRow {
+  lot: StockLot;
+  item: Item;
+  locationCode: string;
+}
+
+export async function adminListLowStock(): Promise<ApiResult<LowStockRow[]>> {
+  try {
+    const { data: lots, error: lotsErr } = await supabase.from('stock_lots').select('*').limit(500);
+    if (lotsErr) return fail(msg(lotsErr));
+    const lotRows = (lots ?? []) as StockLot[];
+    if (lotRows.length === 0) return ok([]);
+    const itemIds = [...new Set(lotRows.map((l) => l.item_id))];
+    const locIds = [...new Set(lotRows.map((l) => l.location_id))];
+    const [{ data: items }, { data: locs }] = await Promise.all([
+      supabase.from('items').select('*').in('id', itemIds),
+      supabase.from('locations').select('id, code').in('id', locIds),
+    ]);
+    const byItem = new Map(((items ?? []) as Item[]).map((i) => [i.id, i]));
+    const byLoc = new Map(((locs ?? []) as Array<{ id: string; code: string }>).map((l) => [l.id, l.code]));
+    const rows: LowStockRow[] = [];
+    for (const lot of lotRows) {
+      const item = byItem.get(lot.item_id);
+      if (!item) continue;
+      if (lot.qty <= item.min_qty) {
+        rows.push({ lot, item, locationCode: byLoc.get(lot.location_id) ?? lot.location_id });
+      }
+    }
+    rows.sort((a, b) => a.lot.qty - b.lot.qty);
+    return ok(rows);
+  } catch (e) {
+    return fail(msg(e));
+  }
+}
+
+export async function adminListAudit(params?: {
+  lotId?: string;
+  itemId?: string;
+  action?: LedgerAction | 'all';
+  limit?: number;
+}): Promise<ApiResult<Ledger[]>> {
+  try {
+    let q = supabase.from('ledger').select('*').order('ts', { ascending: false }).limit(params?.limit ?? 50);
+    if (params?.lotId) q = q.eq('lot_id', params.lotId);
+    if (params?.itemId) q = q.eq('item_id', params.itemId);
+    if (params?.action && params.action !== 'all') q = q.eq('action', params.action);
+    const { data, error } = await q;
+    if (error) return fail(msg(error));
+    return ok((data ?? []) as Ledger[]);
+  } catch (e) {
+    return fail(msg(e));
+  }
+}
+
+export async function adminListCategories(): Promise<ApiResult<Category[]>> {
+  try {
+    const { data, error } = await supabase.from('categories').select('*').order('name');
+    if (error) return fail(msg(error));
+    return ok((data ?? []) as Category[]);
+  } catch (e) {
+    return fail(msg(e));
+  }
+}
+
+export async function adminOpenLoansForMember(memberId: string): Promise<ApiResult<Loan[]>> {
+  try {
+    const { data, error } = await supabase
+      .from('loans')
+      .select('*')
+      .eq('member_id', memberId)
+      .in('status', ['open', 'overdue'])
+      .order('due_at', { ascending: true })
+      .limit(50);
+    if (error) return fail(msg(error));
+    return ok((data ?? []) as Loan[]);
+  } catch (e) {
+    return fail(msg(e));
+  }
+}
+
+export async function adminListRequests(status?: Request['status'] | 'all'): Promise<ApiResult<Request[]>> {
+  try {
+    let q = supabase.from('requests').select('*').order('due_at', { ascending: true }).limit(200);
+    if (status && status !== 'all') q = q.eq('status', status);
+    const { data, error } = await q;
+    if (error) return fail(msg(error));
+    return ok((data ?? []) as Request[]);
+  } catch (e) {
+    return fail(msg(e));
+  }
+}
+
+export async function adminListProjects(): Promise<ApiResult<Project[]>> {
+  try {
+    const { data, error } = await supabase.from('projects').select('*').order('name').limit(200);
+    if (error) return fail(msg(error));
+    return ok((data ?? []) as Project[]);
+  } catch (e) {
+    return fail(msg(e));
+  }
+}
+
+export async function adminGetItemsByIds(ids: string[]): Promise<ApiResult<Item[]>> {
+  try {
+    if (ids.length === 0) return ok([]);
+    const { data, error } = await supabase.from('items').select('*').in('id', ids);
+    if (error) return fail(msg(error));
+    return ok((data ?? []) as Item[]);
+  } catch (e) {
+    return fail(msg(e));
+  }
+}
+
+export async function adminUpdateItem(params: {
+  itemId: string;
+  min_qty?: number;
+  max_qty?: number;
+  replacement_cost?: number;
+  supplier?: string | null;
+  last_rate?: number | null;
+}): Promise<ApiResult<Item>> {
+  try {
+    const patch: Record<string, unknown> = {};
+    if (params.min_qty !== undefined) patch.min_qty = params.min_qty;
+    if (params.max_qty !== undefined) patch.max_qty = params.max_qty;
+    if (params.replacement_cost !== undefined) patch.replacement_cost = params.replacement_cost;
+    if (params.supplier !== undefined) patch.supplier = params.supplier;
+    if (params.last_rate !== undefined) patch.last_rate = params.last_rate;
+    if (Object.keys(patch).length === 0) return fail('Nothing to update');
+    const { data, error } = await supabase
+      .from('items')
+      .update(patch)
+      .eq('id', params.itemId)
+      .select('*')
+      .single();
+    if (error || !data) return fail(msg(error ?? 'Update failed'));
+    return ok(data as Item);
+  } catch (e) {
+    return fail(msg(e));
+  }
+}
+
+export interface MisplacedRow {
+  lot: StockLot;
+  itemName: string;
+  locCode: string;
+  homeCode: string;
+}
+
+export async function adminListMisplaced(): Promise<ApiResult<MisplacedRow[]>> {
+  try {
+    const { data: lots, error } = await supabase.from('stock_lots').select('*').limit(500);
+    if (error) return fail(msg(error));
+    const lotRows = ((lots ?? []) as StockLot[]).filter((l) => l.location_id !== l.home_location_id);
+    if (lotRows.length === 0) return ok([]);
+    const itemIds = [...new Set(lotRows.map((l) => l.item_id))];
+    const locIds = [...new Set(lotRows.flatMap((l) => [l.location_id, l.home_location_id]))];
+    const [{ data: items }, { data: locs }] = await Promise.all([
+      supabase.from('items').select('id, name').in('id', itemIds),
+      supabase.from('locations').select('id, code').in('id', locIds),
+    ]);
+    const byItem = new Map(((items ?? []) as Array<{ id: string; name: string }>).map((i) => [i.id, i.name]));
+    const byLoc = new Map(((locs ?? []) as Array<{ id: string; code: string }>).map((l) => [l.id, l.code]));
+    return ok(
+      lotRows.map((lot) => ({
+        lot,
+        itemName: byItem.get(lot.item_id) ?? lot.item_id,
+        locCode: byLoc.get(lot.location_id) ?? lot.location_id,
+        homeCode: byLoc.get(lot.home_location_id) ?? lot.home_location_id,
+      })),
+    );
   } catch (e) {
     return fail(msg(e));
   }

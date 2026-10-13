@@ -1,10 +1,12 @@
 import { NavLink } from 'react-router-dom'
-import { IconIssue, IconMore, IconReturn, IconScan, IconSearch } from './icons'
+import { IconAdmin, IconIssue, IconMore, IconReturn, IconScan, IconSearch } from './icons'
+import { isStaffRole, useRole } from '../lib/auth'
 
 /**
  * Bottom tab bar — 5 entries, 48px minimum targets.
  * Capture / Search / Dues / Requests / Labels live behind More until their
  * owning agents ship them; entries point at real routes when present.
+ * Admin appears as a 6th tab for admin/storekeeper roles only.
  */
 const TABS = [
   { to: '/scan', label: 'Scan', Icon: IconScan },
@@ -15,9 +17,11 @@ const TABS = [
 ]
 
 export default function BottomNav() {
+  const { role } = useRole()
+  const tabs = isStaffRole(role) ? [...TABS, { to: '/admin', label: 'Admin', Icon: IconAdmin }] : TABS
   return (
     <nav className="bottom-nav" aria-label="Primary">
-      {TABS.map(({ to, label, Icon }) => (
+      {tabs.map(({ to, label, Icon }) => (
         <NavLink key={to} to={to}>
           <Icon size={22} />
           <span>{label}</span>

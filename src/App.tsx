@@ -61,6 +61,7 @@ const Search = guarded(() => import('./routes/Search'), 'Search unavailable')
 const Dues = guarded(() => import('./routes/Dues'), 'Dues unavailable')
 const Requests = guarded(() => import('./routes/Requests'), 'Requests unavailable')
 const Labels = guarded(() => import('./routes/Labels'), 'Labels unavailable')
+const Admin = guarded(() => import('./routes/admin/Admin'), 'Admin unavailable')
 
 function More() {
   return (
@@ -79,6 +80,9 @@ function More() {
         </NavLink>
         <NavLink className="row" to="/labels">
           <span className="row-title">Labels</span>
+        </NavLink>
+        <NavLink className="row" to="/admin">
+          <span className="row-title">Admin console</span>
         </NavLink>
       </div>
     </div>
@@ -128,6 +132,7 @@ function Shell() {
             <Route path="/dues" element={<Dues />} />
             <Route path="/requests" element={<Requests />} />
             <Route path="/labels" element={<Labels />} />
+            <Route path="/admin/*" element={<Admin />} />
             <Route path="/more" element={<More />} />
             <Route path="*" element={<Navigate to="/scan" replace />} />
           </Routes>
