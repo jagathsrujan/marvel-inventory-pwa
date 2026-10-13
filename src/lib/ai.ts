@@ -133,7 +133,7 @@ const FILLER =
 async function tryCloudCleanup(transcript: string): Promise<CleanedText | null> {
   const base = import.meta.env.VITE_LLM_BASE_URL as string | undefined;
   const key = import.meta.env.VITE_LLM_API_KEY as string | undefined;
-  const model = (import.meta.env.VITE_LLM_MODEL as string | undefined) ?? 'gemini-3-flash-lite';
+  const model = (import.meta.env.VITE_LLM_MODEL as string | undefined) ?? 'inclusionai/ling-3.1-flash:free';
   if (!base || !key) return null;
   const res = await fetch(`${base.replace(/\/$/, '')}/chat/completions`, {
     method: 'POST',
