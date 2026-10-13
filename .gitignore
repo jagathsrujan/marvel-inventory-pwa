@@ -16,7 +16,6 @@ dist-ssr
 .vercel/
 supabase/.temp/
 supabase/.branches/
-supabase/config.toml
 
 # Editor directories and files
 .vscode/*

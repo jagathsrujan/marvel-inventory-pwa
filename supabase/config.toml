@@ -1,0 +1,3 @@
+# Minimal Supabase CLI config for MARVEL PWA (Cloud-link only; no local self-host).
+[project]
+name = "marvel-pwa"

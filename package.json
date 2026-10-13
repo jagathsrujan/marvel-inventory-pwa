@@ -7,7 +7,15 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "setup": "./scripts/agent-setup.sh",
+    "check-env": "node scripts/check-env.mjs",
+    "db:push": "supabase db push",
+    "db:seed": "psql \"$SUPABASE_DB_URL\" -f supabase/seed.sql"
+  },
+  "engines": {
+    "node": ">=20",
+    "npm": ">=10"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.3",
