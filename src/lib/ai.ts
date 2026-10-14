@@ -139,7 +139,7 @@ function llmEnv(name: string): string | undefined {
 async function tryCloudCleanup(transcript: string): Promise<CleanedText | null> {
   const base = llmEnv('VITE_LLM_BASE_URL');
   const key = llmEnv('VITE_LLM_API_KEY');
-  const model = llmEnv('VITE_LLM_MODEL') ?? 'inclusionai/ling-3.1-flash:free';
+  const model = llmEnv('VITE_LLM_MODEL') ?? 'poolside/laguna-s-2.1-free';
   const provider = llmEnv('VITE_LLM_PROVIDER') ?? 'openai-compatible';
   if (!base || !key) return null;
   const req = buildLlmRequest({ provider, baseUrl: base, apiKey: key, model, transcript });
