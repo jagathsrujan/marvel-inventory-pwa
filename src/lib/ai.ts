@@ -136,13 +136,45 @@ function llmEnv(name: string): string | undefined {
   return typeof v === 'string' && v.length > 0 ? v : undefined;
 }
 
+const CLOUD_MODELS = [
+  'poolside/laguna-s-2.1-free',
+  'inclusionai/ling-3.1-flash:free',
+  'stealth/glyph-cluster:free',
+  'Qwen/Qwen3.7-Flash',
+];
+
 async function tryCloudCleanup(transcript: string): Promise<CleanedText | null> {
   const base = llmEnv('VITE_LLM_BASE_URL');
   const key = llmEnv('VITE_LLM_API_KEY');
-  const model = llmEnv('VITE_LLM_MODEL') ?? 'poolside/laguna-s-2.1-free';
-  const provider = llmEnv('VITE_LLM_PROVIDER') ?? 'openai-compatible';
   if (!base || !key) return null;
-  const req = buildLlmRequest({ provider, baseUrl: base, apiKey: key, model, transcript });
+  const preferred = llmEnv('VITE_LLM_MODEL');
+  const models = preferred ? [preferred, ...CLOUD_MODELS.filter((m) => m !== preferred)] : CLOUD_MODELS;
+  const provider = llmEnv('VITE_LLM_PROVIDER') ?? 'openai-compatible';
+  for (const model of models) {
+    try {
+      const hit = await cloudCleanupOnce({ base, key, model, provider, transcript });
+      if (hit) return hit;
+    } catch {
+      void 0;
+    }
+  }
+  return null;
+}
+
+async function cloudCleanupOnce(opts: {
+  base: string;
+  key: string;
+  model: string;
+  provider: string;
+  transcript: string;
+}): Promise<CleanedText | null> {
+  const req = buildLlmRequest({
+    provider: opts.provider,
+    baseUrl: opts.base,
+    apiKey: opts.key,
+    model: opts.model,
+    transcript: opts.transcript,
+  });
   const res = await fetch(req.url, {
     method: 'POST',
     headers: req.headers,
