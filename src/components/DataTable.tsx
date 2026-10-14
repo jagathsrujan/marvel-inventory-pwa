@@ -62,32 +62,6 @@ export function DataTable<T>({
 
   return (
     <div className="dt-wrap">
-      <style>{`
-        .dt-wrap { overflow: auto; border: 1px solid #e5e4e7; border-radius: 12px; background: #fff; max-width: 100%; }
-        .dt-wrap table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 15px; }
-        .dt-wrap caption { text-align: left; padding: 12px 16px; font-size: 13px; color: #6b7280; }
-        .dt-wrap thead th {
-          position: sticky; top: 0; z-index: 1; background: #fafaf9;
-          text-align: left; font-size: 13px; font-weight: 600; color: #44403c;
-          border-bottom: 1px solid #e5e4e7; padding: 0;
-        }
-        .dt-wrap thead th > span.hcell,
-        .dt-wrap thead th > button.hcell {
-          display: flex; align-items: center; gap: 6px;
-          min-height: 48px; padding: 8px 16px; width: 100%;
-          font: inherit; color: inherit; background: none; border: 0; text-align: inherit;
-        }
-        .dt-wrap thead th > button.hcell { cursor: pointer; }
-        .dt-wrap thead th > button.hcell:focus-visible,
-        .dt-wrap tbody a:focus-visible,
-        .dt-wrap tbody button:focus-visible {
-          outline: 2px dashed #B45309; outline-offset: 2px;
-        }
-        .dt-wrap tbody td { padding: 8px 16px; min-height: 48px; border-bottom: 1px solid #f0efed; vertical-align: middle; }
-        .dt-wrap tbody tr:last-child td { border-bottom: 0; }
-        @media (hover: hover) { .dt-wrap tbody tr:hover { background: #fffbeb; } }
-        .dt-empty { padding: 24px 16px; font-size: 15px; color: #57534e; }
-      `}</style>
       <table>
         {caption ? <caption>{caption}</caption> : null}
         <thead>

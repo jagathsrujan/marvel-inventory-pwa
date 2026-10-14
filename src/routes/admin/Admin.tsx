@@ -36,7 +36,6 @@ function Login() {
 
   return (
     <section aria-labelledby="admin-login-title">
-      <style>{CSS}</style>
       <h1 id="admin-login-title" className="screen-title">Admin console</h1>
       <p className="meta">Staff only — sign in with your volunteer or faculty login.</p>
       <form className="card" onSubmit={submit}>
@@ -129,7 +128,6 @@ function Overview() {
 
   return (
     <section aria-labelledby="admin-overview-title">
-      <style>{CSS}</style>
       <h2 id="admin-overview-title" className="card-title">Today in the lab</h2>
       {error ? <p className="meta" role="status">{error}</p> : null}
       <div className="kpi-grid">
@@ -144,17 +142,6 @@ function Overview() {
     </section>
   );
 }
-
-const CSS = `
-.kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
-@media (min-width: 1024px) { .kpi-grid { grid-template-columns: repeat(5, 1fr); } }
-.kpi { display: flex; flex-direction: column; gap: 2px; background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; text-decoration: none; color: inherit; }
-.kpi-value { font-size: 28px; font-weight: 700; }
-.kpi-label { font-size: 15px; font-weight: 600; }
-.ad-tabs { display: flex; gap: 4px; overflow-x: auto; margin: 12px 0 16px; }
-.ad-tabs a { flex: none; min-height: 48px; display: inline-flex; align-items: center; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--paper); color: var(--ink-soft); font-size: 15px; font-weight: 600; text-decoration: none; }
-.ad-tabs a[aria-current="page"] { color: var(--accent-ink); border-color: var(--accent); background: var(--accent-wash); }
-`;
 
 export function Admin() {
   const { session, role, loading, error } = useRole();

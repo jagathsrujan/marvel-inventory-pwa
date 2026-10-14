@@ -8,7 +8,6 @@ import type { DataTableColumn } from '../components/DataTable';
 import { daysLate, isMisplaced, waReminderLink } from '../../shared/types';
 import type { Item, Loan, Location, Member, Project, StockLot } from '../../shared/types';
 
-const AMBER = '#B45309';
 const PAGE_SIZE = 50;
 const FINE_PER_DAY = 10;
 
@@ -273,8 +272,8 @@ export function Dues() {
       { key: 'item', label: 'Item', getValue: (r) => r.item.name, render: (r) => <span>{r.item.name}</span> },
       { key: 'project', label: 'Project', getValue: (r) => r.project?.name ?? 'No project', render: (r) => <span>{r.project?.name ?? 'No project'}</span> },
       { key: 'coordinator', label: 'Coordinator', getValue: (r) => r.coordinatorName, render: (r) => <span>{r.coordinatorName}</span> },
-      { key: 'days', label: 'Days late', sortable: true, align: 'right', getValue: (r) => r.lateDays, render: (r) => <span style={{ fontVariantNumeric: 'tabular-nums' }}>{r.lateDays}</span> },
-      { key: 'fine', label: 'Fine', align: 'right', getValue: (r) => r.fine, render: (r) => <span style={{ fontVariantNumeric: 'tabular-nums' }}>Rs {r.fine}</span> },
+      { key: 'days', label: 'Days late', sortable: true, align: 'right', getValue: (r) => r.lateDays, render: (r) => <span className="tnum">{r.lateDays}</span> },
+      { key: 'fine', label: 'Fine', align: 'right', getValue: (r) => r.fine, render: (r) => <span className="tnum">Rs {r.fine}</span> },
       {
         key: 'remind',
         label: 'Reminder',
@@ -299,36 +298,7 @@ export function Dues() {
   );
 
   return (
-    <section className="mv-screen" aria-labelledby="dues-title">
-      <style>{`
-        .mv-screen { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; font-size: 15px; color: #1c1917; max-width: 1200px; margin: 0 auto; padding: 16px; }
-        .mv-screen h1 { font-size: 28px; margin: 0 0 12px; font-weight: 600; }
-        .mv-screen h2 { font-size: 20px; margin: 0 0 8px; font-weight: 600; }
-        .mv-offline { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 10px; padding: 10px 14px; font-size: 13px; margin: 0 0 12px; }
-        .mv-filters label { display: block; font-size: 13px; color: #57534e; margin: 0 0 4px; }
-        .mv-filters input[type="search"] { width: 100%; box-sizing: border-box; min-height: 48px; border-radius: 10px; border: 1px solid #d6d3d1; padding: 8px 14px; font-size: 16px; }
-        .mv-check { display: flex; align-items: center; gap: 10px; min-height: 48px; font-size: 15px; }
-        .mv-check input { width: 22px; height: 22px; }
-        .mv-card { border-bottom: 1px solid #e7e5e4; padding: 12px 4px; }
-        .mv-card h3 { font-size: 15px; margin: 0 0 4px; }
-        .mv-meta { font-size: 13px; color: #57534e; font-variant-numeric: tabular-nums; }
-        .mv-pill { font-size: 13px; white-space: nowrap; }
-        .mv-pill.mv-bad { color: #991b1b; }
-        .mv-rowline { display: flex; gap: 12px; align-items: center; justify-content: space-between; margin-top: 8px; }
-        .mv-remind { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; min-width: 48px; padding: 8px 18px; border-radius: 10px; background: ${AMBER}; color: #fff; font-size: 15px; text-decoration: none; border: 0; cursor: pointer; }
-        .mv-remind:disabled { background: #d6d3d1; color: #78716c; cursor: not-allowed; }
-        button.mv-remind { font: inherit; }
-        .mv-ghost { min-height: 48px; padding: 10px 18px; border-radius: 10px; border: 1px solid #d6d3d1; background: #fff; font-size: 15px; cursor: pointer; }
-        .mv-detail { border: 1px solid #e7e5e4; border-radius: 12px; padding: 16px; background: #fff; }
-        .mv-skel { border-radius: 8px; background: linear-gradient(90deg, #f5f5f4 25%, #e7e5e4 50%, #f5f5f4 75%); background-size: 200% 100%; animation: mvsh 1.2s infinite; min-height: 72px; margin: 8px 0; }
-        @keyframes mvsh { to { background-position: -200% 0; } }
-        @media (prefers-reduced-motion: reduce) { .mv-skel { animation: none; } }
-        .mv-empty, .mv-error { padding: 24px 8px; font-size: 15px; color: #57534e; }
-        .mv-show-narrow { display: block; }
-        .mv-show-wide { display: none; }
-        @media (min-width: 1024px) { .mv-show-narrow { display: none; } .mv-show-wide { display: block; } }
-        button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px dashed ${AMBER}; outline-offset: 2px; }
-      `}</style>
+    <section className="mv-screen wide" aria-labelledby="dues-title">
       <h1 id="dues-title">Dues</h1>
       {offline ? <OfflineBanner count={dues.length} /> : null}
       <DeskLayout
@@ -374,7 +344,7 @@ export function Dues() {
             {phase === 'loading' ? (
               <div aria-busy="true" aria-label="Loading dues">
                 {[0, 1, 2, 3, 4].map((i) => (
-                  <div key={i} className="mv-skel" />
+                  <div key={i} className="mv-skel skel-row" />
                 ))}
               </div>
             ) : null}
@@ -395,7 +365,7 @@ export function Dues() {
               <>
                 <div className="mv-show-narrow" role="list" aria-label="Dues list">
                   {visible.map((d) => (
-                    <div className="mv-card" role="listitem" key={d.loan.id}>
+                    <div className="mv-card flat" role="listitem" key={d.loan.id}>
                       <h3>{d.member.name} — {d.item.name}</h3>
                       <div className="mv-meta">
                         Due {formatDue(d.loan.due_at)} · {d.lateDays} days late · Fine Rs {d.fine}
@@ -432,7 +402,7 @@ export function Dues() {
                   />
                 </div>
                 {filtered.length > visibleCount ? (
-                  <div style={{ marginTop: 12 }}>
+                  <div className="mv-actions">
                     <button type="button" className="mv-ghost" onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}>
                       Show more ({filtered.length - visibleCount} left)
                     </button>
@@ -484,11 +454,11 @@ export function Dues() {
             ) : (
               <p className="mv-meta">Select a due to see detail.</p>
             )}
-            <h2 style={{ marginTop: 16 }}>Misplaced</h2>
+            <h2 className="mv-section">Misplaced</h2>
             {misplaced.length === 0 ? (
               <p className="mv-meta">All lots are home.</p>
             ) : (
-              <ul className="mv-meta" style={{ paddingLeft: 18, margin: '8px 0' }}>
+              <ul className="mv-meta mv-list">
                 {misplaced.map((m) => (
                   <li key={m.lot.id}>
                     {m.itemName} — reported at {m.locCode}, home {m.homeCode}

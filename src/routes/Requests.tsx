@@ -5,7 +5,6 @@ import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import type { CourseKit, Item, Member, Project, Request, RequestStatus } from '../../shared/types';
 
-const AMBER = '#B45309';
 const COURSE_KIT_CODE = 'EV-RE-001-L1';
 
 interface QueueCard {
@@ -324,34 +323,6 @@ export function Requests() {
 
   return (
     <section className="mv-screen" aria-labelledby="req-title">
-      <style>{`
-        .mv-screen { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; font-size: 15px; color: #1c1917; max-width: 880px; margin: 0 auto; padding: 16px; }
-        .mv-screen h1 { font-size: 28px; margin: 0 0 12px; font-weight: 600; }
-        .mv-screen h2 { font-size: 20px; margin: 0 0 8px; font-weight: 600; }
-        .mv-offline { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 10px; padding: 10px 14px; font-size: 13px; margin: 0 0 12px; }
-        .mv-warn { background: #fef2f2; border: 1px solid #fca5a5; border-radius: 10px; padding: 10px 14px; font-size: 13px; margin: 8px 0; }
-        .mv-super { background: #fffbeb; border: 1px solid ${AMBER}; border-radius: 10px; padding: 10px 14px; font-size: 13px; margin: 8px 0; }
-        .mv-notice { background: #f0fdf4; border: 1px solid #86efac; border-radius: 10px; padding: 10px 14px; font-size: 13px; margin: 0 0 12px; }
-        .mv-seg { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 12px; }
-        .mv-seg button { min-height: 48px; padding: 8px 14px; border-radius: 10px; border: 1px solid #d6d3d1; background: #fff; cursor: pointer; font-size: 15px; }
-        .mv-seg button[aria-pressed="true"] { border-color: ${AMBER}; color: ${AMBER}; background: #fffbeb; }
-        .mv-card { position: relative; border: 1px solid #e7e5e4; border-radius: 12px; padding: 16px; margin: 0 0 12px; background: #fff; }
-        .mv-card h3 { font-size: 15px; margin: 0 0 4px; padding-right: 96px; }
-        .mv-meta { font-size: 13px; color: #57534e; font-variant-numeric: tabular-nums; }
-        .mv-items { margin: 8px 0; padding-left: 18px; font-size: 15px; }
-        .mv-pill { font-size: 13px; }
-        .mv-approve { display: block; width: 100%; min-height: 48px; border-radius: 10px; border: 0; background: ${AMBER}; color: #fff; font-size: 15px; cursor: pointer; margin-top: 12px; }
-        .mv-approve:disabled { background: #d6d3d1; color: #78716c; cursor: not-allowed; }
-        .mv-reject { position: absolute; top: 8px; right: 8px; min-height: 48px; min-width: 48px; padding: 8px 14px; border-radius: 10px; border: 1px solid #fca5a5; background: #fff; color: #991b1b; font-size: 15px; cursor: pointer; }
-        .mv-reject:disabled { opacity: 0.6; cursor: not-allowed; }
-        .mv-form label { display: block; font-size: 13px; color: #57534e; margin: 12px 0 4px; }
-        .mv-form input { width: 100%; box-sizing: border-box; min-height: 48px; border-radius: 10px; border: 1px solid #d6d3d1; padding: 8px 14px; font-size: 16px; }
-        .mv-skel { border-radius: 8px; background: linear-gradient(90deg, #f5f5f4 25%, #e7e5e4 50%, #f5f5f4 75%); background-size: 200% 100%; animation: mvsh 1.2s infinite; min-height: 120px; margin: 8px 0; }
-        @keyframes mvsh { to { background-position: -200% 0; } }
-        @media (prefers-reduced-motion: reduce) { .mv-skel { animation: none; } }
-        .mv-empty, .mv-error { padding: 24px 8px; font-size: 15px; color: #57534e; }
-        button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px dashed ${AMBER}; outline-offset: 2px; }
-      `}</style>
       <h1 id="req-title">Requests</h1>
       {offline ? <OfflineBanner count={queuedCount} /> : null}
       {notice ? (
@@ -373,14 +344,14 @@ export function Requests() {
       {phase === 'loading' ? (
         <div aria-busy="true" aria-label="Loading requests">
           {[0, 1].map((i) => (
-            <div key={i} className="mv-skel" />
+            <div key={i} className="mv-skel mv-skel-tall skel-row" />
           ))}
         </div>
       ) : null}
       {phase === 'error' ? (
         <div className="mv-error" role="alert">
           <p>Could not load requests{error ? ` — ${error}` : ''}.</p>
-          <button type="button" className="mv-approve" style={{ width: 'auto', padding: '10px 22px' }} onClick={() => window.location.reload()}>
+          <button type="button" className="mv-primary mv-auto" onClick={() => window.location.reload()}>
             Retry
           </button>
         </div>
@@ -477,7 +448,7 @@ export function Requests() {
           </button>
         </form>
         {kitDone ? (
-          <p className="mv-notice" role="status" style={{ marginTop: 8 }}>
+          <p className="mv-notice mv-spaced" role="status">
             {kitDone}
           </p>
         ) : null}
@@ -521,8 +492,7 @@ export function Requests() {
         </form>
         <button
           type="button"
-          className="mv-approve"
-          style={{ background: '#fff', color: AMBER, border: `1px solid ${AMBER}`, marginTop: 8 }}
+          className="mv-secondary mv-spaced"
           disabled={!bulk.done}
           title={!bulk.done ? 'Issue a bulk batch first' : undefined}
           onClick={returnAll}
@@ -530,7 +500,7 @@ export function Requests() {
           Return all
         </button>
         {bulk.done ? (
-          <p className="mv-notice" role="status" style={{ marginTop: 8 }}>
+          <p className="mv-notice mv-spaced" role="status">
             {bulk.done}
           </p>
         ) : null}

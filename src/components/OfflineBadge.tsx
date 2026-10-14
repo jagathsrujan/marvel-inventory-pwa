@@ -26,7 +26,12 @@ export default function OfflineBadge({ pending }: Props) {
 
   if (online) {
     return (
-      <span className="pill pill-offline" role="status" aria-label={`Online, ${queued} ops waiting to sync`}>
+      <span
+        key={queued}
+        className="pill pill-offline bump"
+        role="status"
+        aria-label={`Online, ${queued} ops waiting to sync`}
+      >
         <IconClock size={14} />
         {queued} queued
       </span>
@@ -35,7 +40,8 @@ export default function OfflineBadge({ pending }: Props) {
 
   return (
     <span
-      className="pill pill-offline"
+      key={queued}
+      className="pill pill-offline bump"
       role="status"
       aria-label={queued > 0 ? `Offline, ${queued} ops queued` : 'Offline'}
     >

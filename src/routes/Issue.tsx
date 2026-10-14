@@ -45,6 +45,15 @@ function announce(message: string): void {
   if (el) el.textContent = message
 }
 
+/** Short haptic tick on the commit event — same frame as the success card. */
+function tick(ms: number | number[] = 15): void {
+  try {
+    navigator.vibrate?.(ms)
+  } catch {
+    // haptics are best-effort
+  }
+}
+
 /**
  * /issue — item card + member card + due chips + pinned Issue button.
  * Offline: queues the issue op and says so. Success states the loan plainly.
@@ -171,6 +180,7 @@ export default function Issue() {
         queued,
       }
       setSuccess(done)
+      tick()
       announce(
         queued
           ? `Issue saved offline, syncs when online. ${first} owes ${view.item.name}.`

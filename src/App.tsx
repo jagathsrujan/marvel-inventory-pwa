@@ -66,7 +66,7 @@ const Admin = guarded(() => import('./routes/admin/Admin'), 'Admin unavailable')
 function More() {
   return (
     <div>
-      <h1 className="screen-title">More</h1>
+      <h1 className="screen-title">Library</h1>
       <p className="meta">Capture, dues, requests, and labels live here.</p>
       <div className="card-flat">
         <NavLink className="row" to="/capture">

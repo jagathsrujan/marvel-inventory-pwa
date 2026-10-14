@@ -31,6 +31,15 @@ function announce(message: string): void {
   if (el) el.textContent = message
 }
 
+/** Short haptic tick on the commit event — same frame as the success card. */
+function tick(ms: number | number[] = 15): void {
+  try {
+    navigator.vibrate?.(ms)
+  } catch {
+    // haptics are best-effort
+  }
+}
+
 /**
  * /return — scan item → loan card → condition → shelf check → pinned Return.
  * Fine is computed, never typed freehand.
@@ -121,6 +130,7 @@ export default function Return() {
       }
       const statement = `${stage.loan.member.name.split(' ')[0]} returned ${stage.loan.item.name}`
       setStage({ kind: 'done', queued, statement })
+      tick()
       announce(queued ? `${statement}. Saved offline, syncs when online.` : `${statement}.`)
     } finally {
       setSubmitting(false)

@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { CSSProperties } from 'react';
 import QRCode from 'qrcode';
 import type { QueuedOp } from '../../shared/types';
 import { qrUrl } from '../../shared/types';
 import { isBluetoothPrintSupported, printLabelM220 } from '../lib/print';
 import { ItemLabel, LocationLabel } from '../components/QrSheet';
+import { ErrorBox, OfflineBanner } from '../components/ScreenStates';
 
 type QueueOpFn = (op: Omit<QueuedOp, 'id' | 'created_at' | 'attempts' | 'last_error'>) => Promise<void>;
 
@@ -19,38 +19,6 @@ async function loadQueueOp(): Promise<QueueOpFn | null> {
   }
   return null;
 }
-
-const ACCENT = '#B45309';
-
-const inputStyle: CSSProperties = {
-  width: '100%',
-  minHeight: 48,
-  fontSize: 16,
-  padding: '10px 12px',
-  border: '1px solid #ccc',
-  borderRadius: 8,
-  boxSizing: 'border-box',
-  fontFamily: 'system-ui, sans-serif',
-};
-
-const btnPrimary: CSSProperties = {
-  minHeight: 48,
-  background: ACCENT,
-  color: '#fff',
-  border: 'none',
-  borderRadius: 10,
-  fontSize: 15,
-  fontWeight: 700,
-  padding: '10px 14px',
-  fontFamily: 'system-ui, sans-serif',
-};
-
-const btnGhost: CSSProperties = {
-  ...btnPrimary,
-  background: '#fff',
-  color: ACCENT,
-  border: `1px solid ${ACCENT}`,
-};
 
 interface SheetItem {
   id: string;
@@ -162,45 +130,46 @@ export default function Labels() {
   }, [sku]);
 
   return (
-    <main style={{ maxWidth: 720, margin: '0 auto', padding: 16, fontFamily: 'system-ui, sans-serif' }} aria-live="polite">
-      <style>{`@media print{.mv-no-print{display:none!important}.mv-sheet{display:block}.mv-item-label,.mv-location-label{break-inside:avoid}}`}</style>
-      <h1 style={{ fontSize: 28, margin: '8px 0' }}>Label sheet</h1>
-      {offline ? (
-        <p role="status" style={{ background: '#fef3c7', border: '1px solid #b45309', padding: 8, borderRadius: 8 }}>
-          Offline — QR sheet renders from cache
-        </p>
-      ) : null}
+    <main className="mv-sheet-shell" aria-live="polite">
+      <h1>Label sheet</h1>
+      {offline ? <OfflineBanner queued={0} /> : null}
 
-      <div className="mv-no-print" style={{ display: 'flex', gap: 8, margin: '12px 0', flexWrap: 'wrap' }}>
-        <button type="button" onClick={() => window.print()} style={{ ...btnPrimary, flex: 1, minWidth: 160 }}>Print sheet</button>
-        <span style={{ display: 'flex', gap: 8, flex: 2, minWidth: 220 }}>
-          <input value={sku} onChange={(e) => setSku(e.target.value)} placeholder="MRV-BRD-NANO-001" aria-label="Sku to queue" style={inputStyle} />
-          <button type="button" onClick={() => void handleLookup()} style={{ ...btnGhost, minWidth: 120 }}>Queue sku</button>
+      <div className="mv-no-print mv-toolbar">
+        <button type="button" className="btn-primary mv-flex" onClick={() => window.print()}>Print sheet</button>
+        <span className="mv-queue">
+          <input className="text" value={sku} onChange={(e) => setSku(e.target.value)} placeholder="MRV-BRD-NANO-001" aria-label="Sku to queue" />
+          <button type="button" className="btn-secondary mv-queue-btn" onClick={() => void handleLookup()}>Queue sku</button>
         </span>
       </div>
       {printMsg ? <p role="status">{printMsg}</p> : null}
 
       {qrState === 'loading' ? <p role="status">Drawing QR codes…</p> : null}
-      {qrState === 'error' ? <p role="alert">QR drawing failed — labels show without codes. Retry by reloading.</p> : null}
+      {qrState === 'error' ? (
+        <ErrorBox
+          title="QR drawing failed"
+          body="Labels show without codes. Retry by reloading."
+          onRetry={() => window.location.reload()}
+          retryLabel="Reload"
+        />
+      ) : null}
       {items.length === 0 && locations.length === 0 ? (
-        <div style={{ border: '1px solid #ddd', borderRadius: 8, padding: 16, marginTop: 12 }}>
+        <div className="empty">
           <p>No labels yet — capture an item first.</p>
-          <a href="/capture" style={{ color: ACCENT }}>Open capture</a>
+          <a className="mv-link" href="/capture">Open capture</a>
         </div>
       ) : null}
 
       <section aria-label="Item labels" className="mv-sheet">
-        <h2 style={{ fontSize: 20 }}>Item labels</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
+        <h2>Item labels</h2>
+        <div className="mv-labels">
           {items.map((item) => (
-            <div key={item.id} style={{ border: '1px solid #e7e5e4', borderRadius: 10, padding: 8 }}>
+            <div key={item.id} className="card mv-label">
               <ItemLabel title={item.title} sku={item.sku} home={item.home} qrDataUrl={qr[`i:${item.id}`] ?? null} />
               <button
                 type="button"
                 onClick={() => void handleSend(item)}
                 disabled={sending === item.id}
-                className="mv-no-print"
-                style={{ ...btnGhost, width: '100%', marginTop: 8 }}
+                className="btn-secondary mv-no-print mv-send"
               >
                 {sending === item.id ? 'Sending…' : 'Send to M220'}
               </button>
@@ -209,9 +178,9 @@ export default function Labels() {
         </div>
       </section>
 
-      <section aria-label="Location labels" className="mv-sheet" style={{ marginTop: 20 }}>
-        <h2 style={{ fontSize: 20 }}>Location labels</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 12 }}>
+      <section aria-label="Location labels" className="mv-sheet mv-loc">
+        <h2>Location labels</h2>
+        <div className="mv-locations">
           {locations.map((loc) => (
             <LocationLabel key={loc.code} code={loc.code} name={loc.name} qrDataUrl={qr[`l:${loc.code}`] ?? null} laminatedNote />
           ))}

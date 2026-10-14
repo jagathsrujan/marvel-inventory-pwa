@@ -162,7 +162,7 @@ export default function Scan() {
               aria-label="Camera preview"
               style={{ display: cameraOn ? 'block' : 'none' }}
             />
-            {cameraOn && <div className="scan-frame" aria-hidden="true" />}
+            {cameraOn && <div className="scan-frame scan-live" aria-hidden="true" />}
             {!cameraOn && (
               <div className="viewfinder-idle">
                 <IconCamera size={44} />

@@ -13,7 +13,7 @@ const TABS = [
   { to: '/search', label: 'Search', Icon: IconSearch },
   { to: '/issue', label: 'Issue', Icon: IconIssue },
   { to: '/return', label: 'Return', Icon: IconReturn },
-  { to: '/more', label: 'More', Icon: IconMore },
+  { to: '/more', label: 'Library', Icon: IconMore },
 ]
 
 export default function BottomNav() {

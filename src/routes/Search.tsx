@@ -6,7 +6,6 @@ import type { ComponentType } from 'react';
 import { TAXONOMY_10 } from '../../shared/types';
 import type { Item, ItemStatus, StockType } from '../../shared/types';
 
-const AMBER = '#B45309';
 const PAGE_SIZE = 50;
 const QUERY_KEY = 'marvel.search.query';
 const CACHE_KEY = 'marvel.search.cache.v1';
@@ -356,39 +355,6 @@ export function Search() {
 
   return (
     <section className="mv-screen" aria-labelledby="search-title">
-      <style>{`
-        .mv-screen { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; font-size: 15px; color: #1c1917; max-width: 880px; margin: 0 auto; padding: 16px; }
-        .mv-screen h1 { font-size: 28px; margin: 0 0 12px; font-weight: 600; }
-        .mv-offline { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 10px; padding: 10px 14px; font-size: 13px; margin: 0 0 12px; }
-        .mv-pillrow { display: flex; gap: 8px; align-items: center; }
-        .mv-searchpill { flex: 1; min-height: 56px; border-radius: 999px; border: 2px solid #d6d3d1; padding: 0 22px; font-size: 20px; width: 100%; box-sizing: border-box; }
-        .mv-searchpill:focus-visible { outline: 2px dashed ${AMBER}; outline-offset: 2px; border-color: ${AMBER}; }
-        .mv-mic { min-width: 56px; min-height: 56px; border-radius: 999px; border: 2px solid #d6d3d1; background: #fff; font-size: 15px; cursor: pointer; }
-        .mv-mic[aria-pressed="true"] { border-color: ${AMBER}; color: ${AMBER}; }
-        .mv-hint { font-size: 13px; color: #78716c; margin: 8px 2px 0; }
-        .mv-chips { display: flex; gap: 8px; overflow-x: auto; padding: 12px 2px; }
-        .mv-chip { flex: 0 0 auto; min-height: 48px; padding: 8px 16px; border-radius: 999px; border: 1px solid #d6d3d1; background: #fff; font-size: 15px; cursor: pointer; }
-        .mv-chip[aria-pressed="true"] { background: ${AMBER}; border-color: ${AMBER}; color: #fff; }
-        .mv-seg { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 12px; }
-        .mv-seg button { min-height: 48px; padding: 8px 14px; border-radius: 10px; border: 1px solid #d6d3d1; background: #fff; cursor: pointer; font-size: 15px; }
-        .mv-seg button[aria-pressed="true"] { border-color: ${AMBER}; color: ${AMBER}; background: #fffbeb; }
-        .mv-actions { display: flex; gap: 8px; margin: 4px 0 12px; }
-        .mv-primary { min-height: 48px; padding: 10px 22px; border-radius: 10px; border: 0; background: ${AMBER}; color: #fff; font-size: 15px; cursor: pointer; }
-        .mv-primary:disabled { background: #d6d3d1; color: #78716c; cursor: not-allowed; }
-        .mv-ghost { min-height: 48px; padding: 10px 18px; border-radius: 10px; border: 1px solid #d6d3d1; background: #fff; font-size: 15px; cursor: pointer; }
-        .mv-row { display: flex; gap: 12px; align-items: center; padding: 12px 4px; border-bottom: 1px solid #e7e5e4; }
-        .mv-thumb { width: 48px; height: 48px; border-radius: 8px; background: #f5f5f4; flex: 0 0 auto; display: flex; align-items: center; justify-content: center; font-size: 13px; color: #78716c; overflow: hidden; }
-        .mv-thumb img { width: 48px; height: 48px; object-fit: cover; }
-        .mv-name { font-size: 15px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 46vw; }
-        .mv-meta { font-size: 13px; color: #57534e; font-variant-numeric: tabular-nums; }
-        .mv-qty { margin-left: auto; flex: 0 0 auto; background: #f5f5f4; border-radius: 999px; padding: 6px 12px; font-size: 13px; font-variant-numeric: tabular-nums; }
-        .mv-pill { font-size: 13px; white-space: nowrap; }
-        .mv-skel { border-radius: 8px; background: linear-gradient(90deg, #f5f5f4 25%, #e7e5e4 50%, #f5f5f4 75%); background-size: 200% 100%; animation: mvsh 1.2s infinite; min-height: 64px; margin: 8px 0; }
-        @keyframes mvsh { to { background-position: -200% 0; } }
-        @media (prefers-reduced-motion: reduce) { .mv-skel { animation: none; } }
-        .mv-empty, .mv-error { padding: 24px 8px; font-size: 15px; color: #57534e; }
-        button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px dashed ${AMBER}; outline-offset: 2px; }
-      `}</style>
       <h1 id="search-title">Search</h1>
       {offline ? (
         Badge ? (
@@ -398,7 +364,7 @@ export function Search() {
         )
       ) : null}
       <div className="mv-pillrow">
-        <label htmlFor="mv-q" className="mv-sr" style={{ position: 'absolute', left: -9999 }}>
+        <label htmlFor="mv-q" className="mv-sr">
           Search items
         </label>
         <input
@@ -472,7 +438,7 @@ export function Search() {
       {phase === 'loading' ? (
         <div aria-busy="true" aria-label="Loading results">
           {[0, 1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="mv-skel" />
+            <div key={i} className="mv-skel skel-row" />
           ))}
         </div>
       ) : null}
@@ -516,7 +482,7 @@ export function Search() {
                   ) : (
                     <StatusPill status={r.status} />
                   )}
-                  <span className="mv-sr" style={{ position: 'absolute', left: -9999 }}>
+                  <span className="mv-sr">
                     {meta.text}
                   </span>
                 </span>
