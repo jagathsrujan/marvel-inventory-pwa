@@ -7,6 +7,7 @@ import { queueOp } from '../lib/db'
 import { useOnlineStatus } from '../lib/sync'
 import { currentCodeFor, findLot, formatDue, homeCodeFor } from '../lib/mock'
 import { IconBox, IconCheck } from '../components/icons'
+import Seg from '../components/Seg'
 import { Empty, ErrorBox, Loading, OfflineBanner, QueuedNote } from '../components/ScreenStates'
 
 type Stage =
@@ -251,18 +252,13 @@ export default function Return() {
         {loan && (
           <div className="card">
             <h2 className="card-title">Condition</h2>
-            <div className="seg cols-3" role="group" aria-label="Return condition">
-              {CONDITIONS.map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  aria-pressed={condition === c}
-                  onClick={() => setCondition(c)}
-                >
-                  {c}
-                </button>
-              ))}
-            </div>
+            <Seg
+              cols={3}
+              ariaLabel="Return condition"
+              options={CONDITIONS.map((c) => ({ value: c, label: c }))}
+              value={condition}
+              onChange={setCondition}
+            />
             {needsPhoto && (
               <div>
                 <label className="field">

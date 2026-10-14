@@ -69,19 +69,19 @@ function More() {
       <h1 className="screen-title">Library</h1>
       <p className="meta">Capture, dues, requests, and labels live here.</p>
       <div className="card-flat">
-        <NavLink className="row" to="/capture">
+        <NavLink className="row" to="/capture" viewTransition>
           <span className="row-title">Capture new item</span>
         </NavLink>
-        <NavLink className="row" to="/dues">
+        <NavLink className="row" to="/dues" viewTransition>
           <span className="row-title">Dues</span>
         </NavLink>
-        <NavLink className="row" to="/requests">
+        <NavLink className="row" to="/requests" viewTransition>
           <span className="row-title">Requests</span>
         </NavLink>
-        <NavLink className="row" to="/labels">
+        <NavLink className="row" to="/labels" viewTransition>
           <span className="row-title">Labels</span>
         </NavLink>
-        <NavLink className="row" to="/admin">
+        <NavLink className="row" to="/admin" viewTransition>
           <span className="row-title">Admin console</span>
         </NavLink>
       </div>
@@ -93,6 +93,16 @@ function Shell() {
   useSyncQueue()
   const online = useOnlineStatus()
   const [pending, setPending] = useState(0)
+  const [scrolled, setScrolled] = useState(false)
+
+  // Scroll edge effect: header gets its hairline + soft shadow only while
+  // content is actually scrolling underneath it (Apple scroll-edge rule).
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 4)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
 
   useEffect(() => {
     let live = true
@@ -113,7 +123,7 @@ function Shell() {
   return (
     <div className="app desk">
       <span id="marvel-live" className="live-region" role="status" aria-live="polite" />
-      <header className="app-header">
+      <header className={`app-header${scrolled ? ' scrolled' : ''}`}>
         <div>
           <p className="app-eyebrow">Makerspace inventory</p>
           <p className="app-title">MARVEL Inventory</p>

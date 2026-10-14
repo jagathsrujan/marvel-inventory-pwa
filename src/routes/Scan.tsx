@@ -5,6 +5,7 @@ import { getLotWithItem, type LotView } from '../lib/data'
 import { useOnlineStatus } from '../lib/sync'
 import { IconCamera } from '../components/icons'
 import StatusPill from '../components/StatusPill'
+import Seg from '../components/Seg'
 import { Empty, ErrorBox, Loading, OfflineBanner } from '../components/ScreenStates'
 
 type ScanState =
@@ -255,22 +256,16 @@ export default function Scan() {
               </div>
             </div>
             <div style={{ marginTop: 16 }}>
-              <div className="seg cols-2" role="group" aria-label="Next step">
-                <button
-                  type="button"
-                  aria-pressed={flow === 'issue'}
-                  onClick={() => setFlow('issue')}
-                >
-                  Issue
-                </button>
-                <button
-                  type="button"
-                  aria-pressed={flow === 'return'}
-                  onClick={() => setFlow('return')}
-                >
-                  Return
-                </button>
-              </div>
+              <Seg
+                cols={2}
+                ariaLabel="Next step"
+                options={[
+                  { value: 'issue', label: 'Issue' },
+                  { value: 'return', label: 'Return' },
+                ]}
+                value={flow}
+                onChange={setFlow}
+              />
               <div style={{ marginTop: 16 }}>
                 <button type="button" className="btn-primary" onClick={goFlow}>
                   {flow === 'issue' ? `Issue ${state.view.item.name}` : 'Mark returned'}

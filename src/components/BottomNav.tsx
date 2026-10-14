@@ -22,7 +22,7 @@ export default function BottomNav() {
   return (
     <nav className="bottom-nav" aria-label="Primary">
       {tabs.map(({ to, label, Icon }) => (
-        <NavLink key={to} to={to}>
+        <NavLink key={to} to={to} viewTransition>
           <Icon size={22} />
           <span>{label}</span>
         </NavLink>

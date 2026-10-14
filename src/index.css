@@ -44,6 +44,17 @@
   --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter,
     "Helvetica Neue", Arial, sans-serif;
   --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* Liquid Glass materials — chrome is translucent and blurs the content
+   * scrolling under it; content stays opaque. Bigger surface = thicker blur
+   * + deeper shadow. --spec-edge is the specular top edge (light catching
+   * the material). */
+  --glass-chip: rgb(255 255 255 / 0.55);
+  --glass-card: rgb(255 255 255 / 0.94);
+  --spec-line: rgb(255 255 255 / 0.55);
+  --spec-edge: inset 0 1px 0 rgb(255 255 255 / 0.55);
+  --blur-thin: blur(14px) saturate(150%);
+  --radius-xl: 28px;
 }
 
 /* Dark Mode — first-class appearance. Same var names, semantic remap.
@@ -73,6 +84,10 @@
   --material-thick-blur: blur(28px) saturate(180%);
   --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 24px rgb(0 0 0 / 0.35);
   --shadow-pinned: 0 -4px 16px rgb(0 0 0 / 0.45), 0 8px 24px rgb(0 0 0 / 0.35);
+  --glass-chip: rgb(255 255 255 / 0.08);
+  --glass-card: rgb(41 37 36 / 0.94);
+  --spec-line: rgb(255 255 255 / 0.1);
+  --spec-edge: inset 0 1px 0 rgb(255 255 255 / 0.08);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -207,7 +222,15 @@ p.meta {
   background: var(--nav-trans);
   -webkit-backdrop-filter: var(--material-thick-blur);
   backdrop-filter: var(--material-thick-blur);
-  border-bottom: 1px solid var(--hairline);
+  /* Scroll edge effect, not a hard divider: the hairline + soft shadow only
+   * appear once content actually scrolls under the bar (Shell sets .scrolled). */
+  border-bottom: 1px solid transparent;
+  transition: border-color var(--dur-ui), box-shadow var(--dur-ui);
+}
+
+.app-header.scrolled {
+  border-bottom-color: var(--hairline);
+  box-shadow: 0 8px 24px rgb(28 25 23 / 0.06);
 }
 
 .app-eyebrow {
@@ -252,11 +275,14 @@ p.meta {
   -webkit-backdrop-filter: var(--material-thick-blur);
   backdrop-filter: var(--material-thick-blur);
   border-top: 1px solid var(--hairline);
+  /* Bright top edge = light catching the material. */
+  box-shadow: inset 0 1px 0 var(--spec-line);
   padding-bottom: env(safe-area-inset-bottom);
 }
 
 .bottom-nav a {
   position: relative;
+  isolation: isolate;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -276,10 +302,22 @@ p.meta {
   height: 22px;
 }
 
+/* Active tab = accent-tinted glass pill behind icon + label (iOS 26 tab feel).
+ * ::before sits below the link's own content via isolation + z-index -1. */
 .bottom-nav a[aria-current="page"] {
   color: var(--accent-ink);
   font-weight: 700;
-  box-shadow: inset 0 2px 0 var(--accent);
+}
+
+.bottom-nav a[aria-current="page"]::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 5px 10px;
+  border-radius: 999px;
+  background: var(--accent-wash);
+  border: 1px solid var(--hairline);
+  box-shadow: var(--spec-edge), 0 2px 8px rgb(28 25 23 / 0.08);
 }
 
 
@@ -381,7 +419,8 @@ p.meta {
 }
 
 /* Pinned primary action — bottom thumb zone on phones. Floats as a real
- * material over content: thick blur, hairline edge, pop shadow. */
+ * material over content: thick blur, hairline edge, specular top edge,
+ * pop shadow. Larger radius than cards — bigger surface, rounder corners. */
 .pinned {
   position: sticky;
   bottom: calc(var(--nav-h) + 16px);
@@ -392,8 +431,8 @@ p.meta {
   -webkit-backdrop-filter: var(--material-thick-blur);
   backdrop-filter: var(--material-thick-blur);
   border: 1px solid var(--hairline);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-pop);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--spec-edge), var(--shadow-pop);
 }
 
 /* ---- Inputs -------------------------------------------------------- */
@@ -452,15 +491,24 @@ input[type="file"].file {
 }
 
 /* ---- Segmented control: iOS-style ---------------------------------------
- * One continuous track; the pressed option materializes as a solid card.
- * No sliding thumb (no JS) — the spring on transform + shadow sells the snap. */
+ * One continuous glass track; a solid glass thumb slides between columns
+ * with the house spring. CSS transitions always retarget from the current
+ * position, so the thumb is interruptible mid-flight (Apple fluid-interface
+ * rule: never lock out input during a transition).
+ * Geometry: track padding 3px, column gap 2px. The thumb is exactly one
+ * column wide; `--seg-i` (set from React) steps it by column pitch
+ * (own width + 2px gap) — translateX % resolves against the thumb itself. */
 .seg {
+  position: relative;
   display: grid;
   gap: 2px;
   padding: 3px;
-  background: var(--muted-wash);
+  background: var(--glass-chip);
+  -webkit-backdrop-filter: var(--blur-thin);
+  backdrop-filter: var(--blur-thin);
   border: 1px solid var(--hairline);
   border-radius: 999px;
+  box-shadow: var(--spec-edge);
 }
 
 .seg.cols-2 {
@@ -471,7 +519,25 @@ input[type="file"].file {
   grid-template-columns: 1fr 1fr 1fr;
 }
 
+.seg-thumb {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  width: calc((100% - 6px - (var(--seg-n, 2) - 1) * 2px) / var(--seg-n, 2));
+  border-radius: 999px;
+  background: var(--paper);
+  border: 1px solid var(--hairline);
+  box-shadow: var(--spec-edge), 0 1px 4px rgb(28 25 23 / 0.14),
+    0 4px 12px rgb(28 25 23 / 0.08);
+  transform: translateX(calc(var(--seg-i, 0) * (100% + 2px)));
+  transition: transform var(--dur-ui) var(--spring);
+  will-change: transform;
+}
+
 .seg button {
+  position: relative;
+  z-index: 1;
   min-height: 48px;
   padding: 10px 8px;
   font-size: 15px;
@@ -485,9 +551,6 @@ input[type="file"].file {
 
 .seg button[aria-pressed="true"] {
   color: var(--ink);
-  background: var(--paper);
-  border-color: var(--hairline);
-  box-shadow: 0 1px 4px rgb(28 25 23 / 0.14), 0 4px 12px rgb(28 25 23 / 0.08);
 }
 
 
@@ -501,8 +564,11 @@ input[type="file"].file {
   font-size: 13px;
   font-weight: 600;
   border-radius: 999px;
-  border: 1px solid var(--line);
-  background: var(--paper);
+  border: 1px solid var(--hairline);
+  background: var(--glass-chip);
+  -webkit-backdrop-filter: var(--blur-thin);
+  backdrop-filter: var(--blur-thin);
+  box-shadow: var(--spec-edge);
   color: var(--ink-soft);
   white-space: nowrap;
 }
@@ -544,8 +610,11 @@ input[type="file"].file {
   font-size: 15px;
   font-weight: 600;
   color: var(--ink-soft);
-  background: var(--paper);
-  border: 1px solid var(--line);
+  background: var(--glass-chip);
+  -webkit-backdrop-filter: var(--blur-thin);
+  backdrop-filter: var(--blur-thin);
+  border: 1px solid var(--hairline);
+  box-shadow: var(--spec-edge);
   border-radius: 999px;
   cursor: pointer;
 }
@@ -616,7 +685,7 @@ input[type="file"].file {
   border-radius: var(--radius-lg);
   padding: 16px;
   margin-top: 16px;
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--spec-edge), var(--shadow-card);
 }
 
 .card:first-child {
@@ -937,14 +1006,16 @@ button.row:active {
   flex: 1;
   min-height: 56px;
   border-radius: 999px;
-  border: 1px solid var(--line);
-  background: var(--paper);
+  border: 1px solid var(--hairline);
+  background: var(--glass-chip);
+  -webkit-backdrop-filter: var(--blur-thin);
+  backdrop-filter: var(--blur-thin);
   color: var(--ink);
   padding: 0 22px;
   font-size: 17px;
   width: 100%;
   box-sizing: border-box;
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--spec-edge), var(--shadow-card);
   transition: border-color var(--dur-ui), box-shadow var(--dur-ui);
 }
 
@@ -1026,8 +1097,11 @@ button.row:active {
   min-height: 48px;
   padding: 8px 14px;
   border-radius: var(--radius);
-  border: 1px solid var(--line);
-  background: var(--paper);
+  border: 1px solid var(--hairline);
+  background: var(--glass-chip);
+  -webkit-backdrop-filter: var(--blur-thin);
+  backdrop-filter: var(--blur-thin);
+  box-shadow: var(--spec-edge);
   color: var(--ink-soft);
   cursor: pointer;
   font-size: 15px;
@@ -1939,6 +2013,16 @@ button.mv-remind {
   transition-duration: var(--dur-press);
 }
 
+/* Route transitions — View Transitions API (progressive enhancement).
+ * <NavLink viewTransition> snapshot-cross-fades between screens; browsers
+ * without support keep the instant swap. iOS tab-switch feel: a short fade,
+ * no push. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 180ms;
+  animation-timing-function: ease;
+}
+
 /* Queue-badge bump: replays when OfflineBadge remounts on count change. */
 @keyframes bump {
   0% { transform: scale(1); }
@@ -1972,6 +2056,13 @@ button.mv-remind {
   .success-box {
     animation: success-fade 200ms ease !important;
   }
+  /* View-transition pseudos are outside the * tree — kill them explicitly. */
+  ::view-transition-group(*),
+  ::view-transition-image-pair(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
 }
 
 @keyframes success-fade {
@@ -1983,7 +2074,13 @@ button.mv-remind {
 @media (prefers-reduced-transparency: reduce) {
   .app-header,
   .bottom-nav,
-  .pinned {
+  .pinned,
+  .seg,
+  .seg-thumb,
+  .pill,
+  .chip,
+  .mv-searchpill,
+  .mv-seg button {
     background: var(--paper);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
